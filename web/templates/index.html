@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClawTMS - Freight Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e94560;
+        }
+        .logo span {
+            color: #fff;
+        }
+        .status-badge {
+            background: #0f3460;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .status-badge.online {
+            color: #00ff88;
+        }
+        .status-badge.offline {
+            color: #ff4444;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 30px 0;
+        }
+        .tab {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab:hover, .tab.active {
+            background: #e94560;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #e94560;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #d63850;
+        }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        th {
+            color: rgba(255,255,255,0.7);
+            font-weight: 600;
+        }
+        .status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status.pending { background: #ffc107; color: #000; }
+        .status.quoted { background: #17a2b8; color: #fff; }
+        .status.dispatched { background: #007bff; color: #fff; }
+        .status.in_transit { background: #6c757d; color: #fff; }
+        .status.delivered { background: #28a745; color: #fff; }
+        .fba-badge {
+            background: #ff9800;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .stops-section {
+            margin-top: 20px;
+        }
+        .stop-item {
+            display: grid;
+            grid-template-columns: 80px 100px 1fr 120px 1fr;
+            gap: 10px;
+            align-items: end;
+            padding: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .stop-item button {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .hidden { display: none; }
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .alert-warning {
+            background: rgba(255,193,7,0.2);
+            border: 1px solid #ffc107;
+            color: #ffc107;
+        }
+        .alert-success {
+            background: rgba(40,167,69,0.2);
+            border: 1px solid #28a745;
+            color: #28a745;
+        }
+        .json-output {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        .action-btns button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .action-btns .view-btn { background: #17a2b8; color: #fff; }
+        .action-btns .quote-btn { background: #28a745; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Claw<span>TMS</span></div>
+            <div class="status-badge" id="dbStatus">
+                <span class="offline">⚫ Demo Mode</span>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('loads')">📦 Loads</button>
+            <button class="tab" onclick="showTab('routes')">🗺️ Route Calculator</button>
+            <button class="tab" onclick="showTab('fba')">⚖️ FBA Checker</button>
+            <button class="tab" onclick="showTab('jacob')">📧 Jacob Generator</button>
+        </div>
+
+        <div id="tab-loads">
+            <div class="card">
+                <h2>Create New Load</h2>
+                <form id="loadForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Load ID</label>
+                            <input type="text" name="load_id" placeholder="ew18161" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Commodity</label>
+                            <input type="text" name="commodity" placeholder="General Merchandise" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Equipment</label>
+                            <select name="equipment_required" required>
+                                <option value="53FT_VAN">53FT VAN</option>
+                                <option value="26FT_BOX">26FT BOX</option>
+                                <option value="FLATBED">FLATBED</option>
+                                <option value="STEP_DECK">STEP DECK</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Total Weight (LBS)</label>
+                            <input type="number" name="total_weight" placeholder="35000" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Pallet Count</label>
+                            <input type="number" name="pallet_count" placeholder="20">
+                        </div>
+                        <div class="form-group">
+                            <label>Linear Feet</label>
+                            <input type="number" name="linear_feet" placeholder="40">
+                        </div>
+                    </div>
+                    <div class="form-grid" style="margin-top: 15px;">
+                        <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                            <input type="checkbox" name="is_fba" id="isFba" style="width: auto;">
+                            <label for="isFba" style="margin: 0;">FBA Load (Amazon)</label>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label>Special Instructions</label>
+                            <input type="text" name="special_instructions" placeholder="Requires liftgate, etc.">
+                        </div>
+                    </div>
+
+                    <div class="stops-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3>Stops</h3>
+                            <button type="button" class="btn btn-secondary" onclick="addStop()">+ Add Stop</button>
+                        </div>
+                        <div id="stopsContainer">
+                            <div class="stop-item" data-stop="1">
+                                <div class="form-group">
+                                    <label>Seq</label>
+                                    <input type="number" value="1" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Type</label>
+                                    <select class="stop-type">
+                                        <option value="pickup">Pickup</option>
+                                        <option value="delivery">Delivery</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Location</label>
+                                    <input type="text" class="stop-location" placeholder="Warehouse Name">
+                                </div>
+                                <div class="form-group">
+                                    <label>Zip Code</label>
+                                    <input type="text" class="stop-zip" placeholder="90210">
+                                </div>
+                                <div class="form-group">
+                                    <label>Address</label>
+                                    <input type="text" class="stop-address" placeholder="Full Address">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Create Load</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Active Loads</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Load ID</th>
+                            <th>Status</th>
+                            <th>Commodity</th>
+                            <th>Weight</th>
+                            <th>Equipment</th>
+                            <th>FBA</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="loadsTable">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: rgba(255,255,255,0.5);">
+                                No loads yet. Create your first load above.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-routes" class="hidden">
+            <div class="card">
+                <h2>Route Calculator</h2>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                    Select multiple loads to calculate total distance and generate route links.
+                </p>
+                <div class="form-group">
+                    <label>Load IDs (comma separated)</label>
+                    <input type="text" id="routeLoadIds" placeholder="ew18161, ew18162, ew18163">
+                </div>
+                <button onclick="calculateRoutes()" class="btn btn-primary" style="margin-top: 15px;">Calculate Routes</button>
+                <div id="routeResults" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-fba" class="hidden">
+            <div class="card">
+                <h2>FBA Compliance Checker</h2>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                    Check if FBA loads exceed Amazon's 1,500 lbs per pallet limit.
+                </p>
+                <div class="form-group">
+                    <label>Load ID</label>
+                    <input type="text" id="fbaLoadId" placeholder="ew18161">
+                </div>
+                <button onclick="checkFBA()" class="btn btn-primary" style="margin-top: 15px;">Check Compliance</button>
+                <div id="fbaResults" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <div id="tab-jacob" class="hidden">
+            <div class="card">
+                <h2>Jacob Email Generator</h2>
+                <p style="color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                    Generate professional broker emails using AI.
+                </p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Load ID</label>
+                        <input type="text" id="jacobLoadId" placeholder="ew18161">
+                    </div>
+                    <div class="form-group">
+                        <label>Recipient Name</label>
+                        <input type="text" id="jacobName" placeholder="Sam">
+                    </div>
+                </div>
+                <button onclick="generateJacobEmail()" class="btn btn-primary" style="margin-top: 15px;">Generate Email</button>
+                <div id="jacobResults" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let stopsCount = 1;
+        let demoLoads = [];
+
+        async function checkHealth() {
+            try {
+                const res = await fetch('/api/health');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    document.getElementById('dbStatus').innerHTML = '<span class="online">🟢 Online</span>';
+                }
+            } catch (e) {
+                document.getElementById('dbStatus').innerHTML = '<span class="offline">⚫ Demo Mode</span>';
+            }
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            if (tab === 'loads') loadLoads();
+        }
+
+        function addStop() {
+            stopsCount++;
+            const container = document.getElementById('stopsContainer');
+            const stopHtml = `
+                <div class="stop-item" data-stop="${stopsCount}">
+                    <div class="form-group">
+                        <label>Seq</label>
+                        <input type="number" value="${stopsCount}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select class="stop-type">
+                            <option value="pickup">Pickup</option>
+                            <option value="delivery">Delivery</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" class="stop-location" placeholder="Warehouse Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Zip Code</label>
+                        <input type="text" class="stop-zip" placeholder="90210">
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" class="stop-address" placeholder="Full Address">
+                        <button type="button" onclick="this.parentElement.parentElement.remove()" style="margin-top: 5px;">Remove</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', stopHtml);
+        }
+
+        function getStopsFromForm() {
+            const stops = [];
+            document.querySelectorAll('.stop-item').forEach((item, idx) => {
+                stops.push({
+                    sequence: idx + 1,
+                    type: item.querySelector('.stop-type').value,
+                    location_name: item.querySelector('.stop-location').value,
+                    zip_code: item.querySelector('.stop-zip').value,
+                    full_address: item.querySelector('.stop-address').value
+                });
+            });
+            return stops;
+        }
+
+        document.getElementById('loadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            const load = {
+                load_id: formData.get('load_id'),
+                commodity: formData.get('commodity'),
+                equipment_required: formData.get('equipment_required'),
+                total_weight: parseFloat(formData.get('total_weight')),
+                pallet_count: parseInt(formData.get('pallet_count')) || 0,
+                linear_feet: parseInt(formData.get('linear_feet')) || 0,
+                is_fba: formData.get('is_fba') === 'on',
+                special_instructions: formData.get('special_instructions'),
+                stops: getStopsFromForm()
+            };
+
+            try {
+                const res = await fetch('/api/loads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(load)
+                });
+                if (res.ok) {
+                    alert('Load created successfully!');
+                    form.reset();
+                    document.getElementById('stopsContainer').innerHTML = `
+                        <div class="stop-item" data-stop="1">
+                            <div class="form-group"><label>Seq</label><input type="number" value="1" disabled></div>
+                            <div class="form-group"><label>Type</label><select class="stop-type"><option value="pickup">Pickup</option><option value="delivery">Delivery</option></select></div>
+                            <div class="form-group"><label>Location</label><input type="text" class="stop-location" placeholder="Warehouse Name"></div>
+                            <div class="form-group"><label>Zip Code</label><input type="text" class="stop-zip" placeholder="90210"></div>
+                            <div class="form-group"><label>Address</label><input type="text" class="stop-address" placeholder="Full Address"></div>
+                        </div>
+                    `;
+                    stopsCount = 1;
+                    loadLoads();
+                }
+            } catch (e) {
+                demoLoads.push({...load, status: 'pending', created_at: new Date().toISOString()});
+                alert('Demo Mode: Load saved locally!');
+                renderLoads();
+            }
+        });
+
+        async function loadLoads() {
+            try {
+                const res = await fetch('/api/loads');
+                if (res.ok) {
+                    const loads = await res.json();
+                    demoLoads = loads;
+                    renderLoads();
+                }
+            } catch (e) {
+                renderLoads();
+            }
+        }
+
+        function renderLoads() {
+            const tbody = document.getElementById('loadsTable');
+            if (demoLoads.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: rgba(255,255,255,0.5);">No loads yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = demoLoads.map(load => `
+                <tr>
+                    <td><strong>${load.load_id}</strong></td>
+                    <td><span class="status ${load.status}">${load.status}</span></td>
+                    <td>${load.commodity}</td>
+                    <td>${load.total_weight?.toLocaleString() || 0} lbs</td>
+                    <td>${load.equipment_required}</td>
+                    <td>${load.is_fba ? '<span class="fba-badge">FBA</span>' : ''}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="view-btn" onclick="viewLoad('${load.load_id}')">View</button>
+                            <button class="quote-btn" onclick="createQuote('${load.load_id}')">Quote</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewLoad(id) {
+            const load = demoLoads.find(l => l.load_id === id);
+            if (load) {
+                alert(JSON.stringify(load, null, 2));
+            }
+        }
+
+        async function createQuote(id) {
+            const buyRate = prompt('Enter Buy Rate ($):');
+            const sellRate = prompt('Enter Sell Rate ($):');
+            if (!buyRate || !sellRate) return;
+
+            const quote = {
+                load_id: id,
+                carrier_name: 'Demo Carrier',
+                driver_name: 'Demo Driver',
+                buy_rate: parseFloat(buyRate),
+                sell_rate: parseFloat(sellRate)
+            };
+
+            try {
+                const res = await fetch('/api/quotes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(quote)
+                });
+                if (res.ok) {
+                    alert('Quote created successfully!');
+                    loadLoads();
+                }
+            } catch (e) {
+                alert('Demo Mode: Quote recorded locally');
+            }
+        }
+
+        async function calculateRoutes() {
+            const ids = document.getElementById('routeLoadIds').value.split(',').map(s => s.trim());
+            if (!ids.length) return;
+
+            const results = ids.map(id => {
+                const load = demoLoads.find(l => l.load_id === id);
+                if (!load) return null;
+                const stops = load.stops || [];
+                const addresses = stops.map(s => s.full_address || s.zip_code);
+                const routeLink = addresses.length >= 2 ? 
+                    'https://www.google.com/maps/dir/' + addresses.map(a => a.replace(/ /g, '+')).join('/') : '';
+                const zipPrefixes = stops.map(s => s.zip_code?.substring(0, 3) || '');
+                return {
+                    load_id: id,
+                    distance: 'N/A (Set GOOGLE_MAPS_API_KEY)',
+                    route_link: routeLink || 'N/A',
+                    zip_prefixes: [...new Set(zipPrefixes)]
+                };
+            }).filter(Boolean);
+
+            document.getElementById('routeResults').innerHTML = `
+                <h3>Route Summary</h3>
+                <div class="json-output">${JSON.stringify(results, null, 2)}</div>
+            `;
+        }
+
+        async function checkFBA() {
+            const id = document.getElementById('fbaLoadId').value;
+            const load = demoLoads.find(l => l.load_id === id);
+            if (!load) {
+                alert('Load not found');
+                return;
+            }
+
+            let result = { load_id: id, is_overweight: false, weight_per_pallet: 0, message: '' };
+            
+            if (load.is_fba && load.pallet_count > 0) {
+                result.weight_per_pallet = load.total_weight / load.pallet_count;
+                result.is_overweight = result.weight_per_pallet > 1500;
+                if (result.is_overweight) {
+                    result.message = `⚠️ Amazon Pallet Overweight Risk: ${result.weight_per_pallet.toFixed(0)} lbs per pallet (max 1,500 lbs)`;
+                } else {
+                    result.message = '✅ FBA weight compliant';
+                }
+            } else {
+                result.message = 'ℹ️ Not an FBA load or pallet count not specified';
+            }
+
+            const div = document.getElementById('fbaResults');
+            div.innerHTML = result.is_overweight ? 
+                `<div class="alert alert-warning">${result.message}</div>` :
+                `<div class="alert alert-success">${result.message}</div>`;
+        }
+
+        async function generateJacobEmail() {
+            const loadId = document.getElementById('jacobLoadId').value;
+            const name = document.getElementById('jacobName').value || 'Customer';
+            const load = demoLoads.find(l => l.load_id === loadId);
+            
+            if (!load) {
+                alert('Load not found');
+                return;
+            }
+
+            const stops = load.stops || [];
+            let stopsList = stops.map(s => `${s.location_name} (${s.zip_code})`).join(' → ');
+            
+            const email = `You are Jacob, a freight broker. Generate an email to ${name} using the following data:
+
+Load ID: ${load.load_id}
+Origin: ${stops[0]?.location_name || 'N/A'}, ${stops[0]?.zip_code || 'N/A'}
+Stops: ${stopsList}
+Total Weight: ${load.total_weight?.toLocaleString() || 0} lbs
+Equipment: ${load.equipment_required}
+Weather: N/A
+
+Keep it professional and concise.`;
+
+            document.getElementById('jacobResults').innerHTML = `
+                <h3>Generated Email Template</h3>
+                <div class="json-output">${email}</div>
+            `;
+        }
+
+        checkHealth();
+        loadLoads();
+    </script>
+</body>
+</html>
